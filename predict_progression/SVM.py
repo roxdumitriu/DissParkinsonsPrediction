@@ -6,7 +6,6 @@ from sklearn.model_selection import StratifiedShuffleSplit, train_test_split
 
 N_SPLITS = 1
 data = pd.read_csv("../data/updrs.csv")
-le = preprocessing.LabelEncoder()
 
 X = data.drop(columns=["patno", "score", "date_scan"])
 y = data["score"].astype(int)
