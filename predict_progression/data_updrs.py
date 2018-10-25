@@ -2,6 +2,7 @@ import pandas as pd
 
 updrs_df = pd.read_csv("../data/MDS_UPDRS_Part_III.csv")
 thick_vol_df = pd.read_csv("../data/thickness_and_volume_data.csv")
+
 # The fields in the UPDRS file that denote scores.
 scoring_fields = ["NP3SPCH", "NP3FACXP", "NP3RIGN", "NP3RIGRU", "NP3RIGLU",
                   "PN3RIGRL", "NP3RIGLL", "NP3FTAPR", "NP3FTAPL", "NP3HMOVR",
@@ -10,14 +11,16 @@ scoring_fields = ["NP3SPCH", "NP3FACXP", "NP3RIGN", "NP3RIGRU", "NP3RIGLU",
                   "NP3PSTBL", "NP3POSTR", "NP3BRADY", "NP3PTRMR", "NP3PTRML",
                   "NP3KTRMR", "NP3KTRML", "NP3RTARU", "NP3RTALU", "NP3RTARL",
                   "NP3RTALL", "NP3RTALJ", "NP3RTCON"]
-scoring_buckets = {0: 0}
+scoring_buckets = {}
 bucket = 0
 for x in range(1, 109):
-    if 1 <= x <= 10:
-        scoring_buckets[x] = 1
+    if 0 <= x <= 10:
+        scoring_buckets[x] = 0
     elif 11 <= x <= 20:
-        scoring_buckets[x] = 2
+        scoring_buckets[x] = 1
     elif 21 <= x <= 30:
+        scoring_buckets[x] = 2
+    elif 31 <= x <= 40:
         scoring_buckets[x] = 3
     else:
         scoring_buckets[x] = 4
@@ -38,5 +41,4 @@ thick_vol_df = pd.merge(thick_vol_df, updrs_df, on=["date_scan", "patno"])
 thick_vol_df.drop_duplicates(subset=["date_scan", "patno"], keep="first",
                              inplace=True)
 
-print(thick_vol_df["score"].value_counts())
 thick_vol_df.to_csv("../data/updrs.csv")
