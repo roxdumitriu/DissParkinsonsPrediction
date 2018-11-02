@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 data = pd.read_csv("../data/updrs.csv")
+cols = data.columns.values
+cols = sorted(cols)
 for col in data.columns.values:
     xs = []
     for x in data['score'].unique():
@@ -9,7 +11,7 @@ for col in data.columns.values:
 
     # Assign colors for each airline and the names
     # colors = ['#E69F00', '#56B4E9', '#F0E442', '#009E73', '#D55E00']
-    names = ['0', '1', '2', '3', '4']
+    names = ['0', '1']
 
     # Make the histogram using a list of lists
     # Normalize the flights and assign colors and names
