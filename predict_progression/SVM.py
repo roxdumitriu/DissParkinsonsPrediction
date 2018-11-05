@@ -1,5 +1,3 @@
-import sklearn
-
 import pandas as pd
 from sklearn import preprocessing
 from sklearn import svm
