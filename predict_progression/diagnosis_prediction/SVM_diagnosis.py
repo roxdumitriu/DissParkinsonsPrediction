@@ -34,11 +34,15 @@ print('Average fscore: {0:0.2f}'.format(average_f1_macro))
 print('Average accuracy: {0:0.2f}'.format(average_accuracy))
 
 SVClassifier = svm.SVC(kernel='linear', gamma='auto')
-scores = cross_val_score(SVClassifier, X, y, cv=N_SPLITS, scoring='f1_micro')
+scores = cross_val_score(SVClassifier, X, y,
+                         cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
+                         scoring='f1_micro')
 print("F1-micro: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
-scores = cross_val_score(SVClassifier, X, y, cv=N_SPLITS, scoring='f1_macro')
+scores = cross_val_score(SVClassifier, X, y,
+                         cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
+                         scoring='f1_macro')
 print("F1-macro: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
-scores = cross_val_score(SVClassifier, X, y, cv=N_SPLITS, scoring='accuracy')
+scores = cross_val_score(SVClassifier, X, y,
+                         cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
+                         scoring='accuracy')
 print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
-
-

@@ -13,5 +13,5 @@ thick_vol_df = pd.merge(thick_vol_df, diagnosis_df, on=["patno"])
 
 print(thick_vol_df["diagnosis"].value_counts())
 
-thick_vol_df.to_csv("../../data/diagnosis.csv")
+thick_vol_df.to_csv("../../data/diagnosis.csv", index=False)
 
