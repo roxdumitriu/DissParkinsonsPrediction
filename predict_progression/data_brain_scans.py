@@ -8,7 +8,6 @@ volume_lh_df = pd.read_csv("../data/aparcstat_a2009s_volume_lh.txt",
                            delimiter="\t")
 volume_rh_df = pd.read_csv("../data/aparcstat_a2009s_volume_rh.txt",
                            delimiter="\t")
-# print(volume_lh_df["lh_G_oc-temp_med-Lingual_area"])
 # Need the diagnosis to be able to scale volumes by the eTIVs afterwards.
 diagnosis_df = pd.read_csv("../data/Patient_Status.csv")
 diagnosis_df.rename(columns={"RECRUITMENT_CAT": "diagnosis", "PATNO": "patno"},

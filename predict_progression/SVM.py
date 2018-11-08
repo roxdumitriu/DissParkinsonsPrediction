@@ -4,7 +4,7 @@ from sklearn import svm
 from sklearn.model_selection import cross_val_score, StratifiedShuffleSplit
 
 N_SPLITS = 10
-data = pd.read_csv("../data/moca.csv")
+data = pd.read_csv("../data/updrs.csv")
 X = data.drop(columns=["patno", "score", "date_scan"])
 y = data["score"].astype(int)
 

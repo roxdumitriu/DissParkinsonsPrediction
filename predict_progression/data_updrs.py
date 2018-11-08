@@ -29,7 +29,7 @@ thick_vol_df.drop_duplicates(subset=["date_scan", "patno"], keep="first",
                              inplace=True)
 
 # Split the scores into equally-sized buckets.
-num_buckets = 5
+num_buckets = 4
 max_bucket_size = len(thick_vol_df["score"]) / num_buckets
 scoring_buckets = {}
 bucket = 0
