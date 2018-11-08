@@ -52,7 +52,7 @@ for x in range(0, 4):
                 for index, row in df.iterrows():
                     row[column] = row[column] * eTIVs[row["diagnosis"]] / row[
                         "eTIV"]
-        df = df.drop(columns = ["diagnosis"])
+        df = df.drop(columns=["diagnosis"])
 
     dataframes[x] = df.drop(columns=["eTIV", "BrainSegVolNotVent"])
 
