@@ -9,6 +9,13 @@ volume_lh_df = pd.read_csv("../data/aparcstat_a2009s_volume_lh.txt",
 volume_rh_df = pd.read_csv("../data/aparcstat_a2009s_volume_rh.txt",
                            delimiter="\t")
 
+# Need the diagnosis to be able to scale volumes by the eTIVs afterwards.
+diagnosis_df = pd.read_csv("../data/Patient_Status.csv")
+diagnosis_df.rename(columns={"RECRUITMENT_CAT": "diagnosis", "PATNO": "patno"},
+                    inplace=True)
+diagnosis_df = diagnosis_df[["patno", "diagnosis"]]
+diagnosis_df['patno'] = diagnosis_df['patno'].apply(str)
+
 # Each dataframe and their primary key.
 dataframes = [thickness_lh_df, thickness_rh_df, volume_lh_df, volume_rh_df]
 primary_keys = ["lh.aparc.a2009s.thickness", "rh.aparc.a2009s.thickness",
@@ -32,11 +39,26 @@ for x in range(0, 4):
         patient_no.append(patient_info[1])
     df["date_scan"] = date_scan
     df["patno"] = patient_no
+    df = df.drop(columns=[pk])
+    if x == 2 or x == 3:
+        df = pd.merge(df, diagnosis_df, on=["patno"])
+        eTIVs = {}
+        for diagnosis in list(df["diagnosis"].unique()):
+            eTIVs[diagnosis] = df.loc[df["diagnosis"] == diagnosis][
+                "eTIV"].mean()
+        for column in list(df.columns.values):
+            if column not in ["eTIV", "BrainSegVolNotVent", "date_scan",
+                              "patno", "diagnosis"]:
+                for index, row in df.iterrows():
+                    row[column] = row[column] * eTIVs[row["diagnosis"]] / row[
+                        "eTIV"]
+        df = df.drop(columns = ["diagnosis"])
+
+    dataframes[x] = df.drop(columns=["eTIV", "BrainSegVolNotVent"])
 
 data = pd.merge(dataframes[0], dataframes[1], on=["date_scan", "patno"])
 data = pd.merge(data, dataframes[2], on=["date_scan", "patno"])
 data = pd.merge(data, dataframes[3], on=["date_scan", "patno"])
 
-data = data.drop(columns=primary_keys)
-
-data.to_csv("../data/thickness_and_volume_data.csv")
+print(data.columns.values)
+data.to_csv("../data/thickness_and_volume_data.csv", index=False)
