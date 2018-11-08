@@ -43,7 +43,5 @@ for score in sorted(counts):
         current_bucket_size = 0
     scoring_buckets[score] = bucket
     current_bucket_size += count
-print(scoring_buckets)
 thick_vol_df["score"].replace(scoring_buckets, inplace=True)
-print(thick_vol_df["score"].value_counts())
-thick_vol_df.to_csv("../data/updrs.csv")
+thick_vol_df.to_csv("../data/updrs.csv", index=False)
