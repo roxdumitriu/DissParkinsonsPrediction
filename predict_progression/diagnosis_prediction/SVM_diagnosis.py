@@ -13,6 +13,8 @@ y = data["diagnosis"]
 le.fit(y)
 # 0 = Healthy, 1 = PD, 2 = PRODROMA
 y = le.transform(y)
+scaler = preprocessing.StandardScaler().fit(X)
+X = pd.DataFrame(scaler.transform(X))
 
 skf = StratifiedShuffleSplit(n_splits=N_SPLITS)
 fscores_macro = []

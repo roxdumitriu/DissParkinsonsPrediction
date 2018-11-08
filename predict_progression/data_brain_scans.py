@@ -8,7 +8,7 @@ volume_lh_df = pd.read_csv("../data/aparcstat_a2009s_volume_lh.txt",
                            delimiter="\t")
 volume_rh_df = pd.read_csv("../data/aparcstat_a2009s_volume_rh.txt",
                            delimiter="\t")
-
+# print(volume_lh_df["lh_G_oc-temp_med-Lingual_area"])
 # Need the diagnosis to be able to scale volumes by the eTIVs afterwards.
 diagnosis_df = pd.read_csv("../data/Patient_Status.csv")
 diagnosis_df.rename(columns={"RECRUITMENT_CAT": "diagnosis", "PATNO": "patno"},
@@ -50,8 +50,9 @@ for x in range(0, 4):
             if column not in ["eTIV", "BrainSegVolNotVent", "date_scan",
                               "patno", "diagnosis"]:
                 for index, row in df.iterrows():
-                    row[column] = row[column] * eTIVs[row["diagnosis"]] / row[
-                        "eTIV"]
+                    df.at[index, column] = row[column] * eTIVs[
+                        row["diagnosis"]] / row[
+                                               "eTIV"]
         df = df.drop(columns=["diagnosis"])
 
     dataframes[x] = df.drop(columns=["eTIV", "BrainSegVolNotVent"])
@@ -59,6 +60,4 @@ for x in range(0, 4):
 data = pd.merge(dataframes[0], dataframes[1], on=["date_scan", "patno"])
 data = pd.merge(data, dataframes[2], on=["date_scan", "patno"])
 data = pd.merge(data, dataframes[3], on=["date_scan", "patno"])
-
-print(data.columns.values)
 data.to_csv("../data/thickness_and_volume_data.csv", index=False)
