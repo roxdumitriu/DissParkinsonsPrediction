@@ -21,7 +21,7 @@ thick_vol_df.drop_duplicates(subset=["date_scan", "patno"], keep="first",
                              inplace=True)
 
 # Split the scores into equally-sized buckets.
-num_buckets = 3
+num_buckets = 4
 max_bucket_size = len(thick_vol_df["score"]) / num_buckets
 scoring_buckets = {}
 bucket = 0
@@ -37,4 +37,5 @@ for score in sorted(counts):
     current_bucket_size += count
 print(scoring_buckets)
 thick_vol_df["score"].replace(scoring_buckets, inplace=True)
+print(thick_vol_df["score"].value_counts())
 thick_vol_df.to_csv("../data/moca.csv", index=False)
