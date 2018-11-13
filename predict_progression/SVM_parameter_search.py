@@ -20,7 +20,7 @@ tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
 score = "accuracy"
 
 clf = GridSearchCV(svm.SVC(), tuned_parameters, cv=5,
-                   scoring='%s_macro' % score)
+                   scoring='%s' % score)
 clf.fit(X_train, y_train)
 
 print("Best parameters set found on development set:")
