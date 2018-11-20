@@ -12,7 +12,7 @@ scaler = preprocessing.StandardScaler().fit(X)
 X = pd.DataFrame(scaler.transform(X))
 skf = StratifiedShuffleSplit(n_splits=N_SPLITS)
 
-MLPclassifier = MLPClassifier(hidden_layer_sizes=(64, 64, 64, 64), alpha=0.1, max_iter=10000)
+MLPclassifier = MLPClassifier(hidden_layer_sizes=(64, 64, 64, 64), alpha=0.001, max_iter=10000)
 scores = cross_val_score(MLPclassifier, X, y,
                          cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
                          scoring='f1_micro')

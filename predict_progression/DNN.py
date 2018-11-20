@@ -27,17 +27,20 @@ for feature in data.columns.values.tolist():
 
 X_train, X_test, y_train, y_test = train_test_split(data, data["score"],
                                                     test_size=0.1)
-train_data = lambda: input_fn(X_train, label_key='score', num_epochs=1,
+train_data = lambda: input_fn(X_train, label_key='score', num_epochs=50,
                               shuffle=True, batch_size=10)
-test_data = lambda: input_fn(X_test, label_key='score', num_epochs=1,
+test_data = lambda: input_fn(X_test, label_key='score', num_epochs=50,
                              shuffle=True, batch_size=10)
 classifier = tf.estimator.DNNClassifier(feature_columns=feature_columns,
-                                        n_classes=4, hidden_units=[32, 16, 4],
-                                        optimizer=tf.train.ProximalAdagradOptimizer(
-                                            learning_rate=0.008,
-                                            l1_regularization_strength=0.001),
+                                        n_classes=5, hidden_units=[512, 512, 512, 512, 512, 512],
+                                        optimizer=tf.train.AdamOptimizer(
+                                            # l1_regularization_strength=0.001,
+                                            learning_rate=0.001
+                                            ),
                                         )
-classifier.train(train_data)
+classifier.train(train_data, steps=500)
 result = classifier.evaluate(test_data)
+print(result)
+result = classifier.evaluate(train_data)
 print(result)
 # {'accuracy': 0.375, 'average_loss': 245.9207, 'loss': 2459.207, 'global_step': 36}
