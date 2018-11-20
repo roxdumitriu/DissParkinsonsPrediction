@@ -14,8 +14,8 @@ X = pd.DataFrame(scaler.transform(X))
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
-                     'C': [1, 10, 100, 1000]},
-                    {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}]
+                     'C': [1, 10, 50, 100, 500, 1000]},
+                    {'kernel': ['linear'], 'C': [1, 10, 50, 100, 500, 1000]}]
 
 score = "accuracy"
 

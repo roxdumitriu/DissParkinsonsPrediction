@@ -12,7 +12,7 @@ scaler = preprocessing.StandardScaler().fit(X)
 X = pd.DataFrame(scaler.transform(X))
 skf = StratifiedShuffleSplit(n_splits=N_SPLITS)
 
-SVClassifier = svm.SVC(C=100, gamma=0.001, kernel='rbf')
+SVClassifier = svm.SVC(C=50, gamma=0.001, kernel='rbf')
 scores = cross_val_score(SVClassifier, X, y,
                          cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
                          scoring='f1_micro')

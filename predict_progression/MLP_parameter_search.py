@@ -15,8 +15,8 @@ X = pd.DataFrame(scaler.transform(X))
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-parameters = [{'alpha': [0.1],
-               'hidden_layer_sizes': [(64, 64, 64), (1024, 64, 64)],
+parameters = [{'alpha': [0.1, 0.01, 0.001],
+               'hidden_layer_sizes': [(64, 64, 64), (64, 64, 64, 64)],
                'max_iter': [5000, 10000]},
               ]
 score = "accuracy"

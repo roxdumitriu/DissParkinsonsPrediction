@@ -39,6 +39,7 @@ for x in range(0, 4):
     df["date_scan"] = date_scan
     df["patno"] = patient_no
     df = df.drop(columns=[pk])
+    # If the dataframe is about volumes.
     if x == 2 or x == 3:
         df = pd.merge(df, diagnosis_df, on=["patno"])
         eTIVs = {}
@@ -50,8 +51,7 @@ for x in range(0, 4):
                               "patno", "diagnosis"]:
                 for index, row in df.iterrows():
                     df.at[index, column] = row[column] * eTIVs[
-                        row["diagnosis"]] / row[
-                                               "eTIV"]
+                        row["diagnosis"]] / row["eTIV"]
         df = df.drop(columns=["diagnosis"])
 
     dataframes[x] = df.drop(columns=["eTIV", "BrainSegVolNotVent"])
