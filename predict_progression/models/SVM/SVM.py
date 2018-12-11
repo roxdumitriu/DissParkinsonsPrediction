@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn import preprocessing
 from sklearn import svm
 from sklearn.metrics import accuracy_score
-from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
+from sklearn.multiclass import OneVsOneClassifier
 
 N_SPLITS = 9
 
