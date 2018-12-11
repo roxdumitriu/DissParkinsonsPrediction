@@ -1,27 +1,37 @@
 import pandas as pd
 from sklearn import preprocessing
 from sklearn import svm
-from sklearn.model_selection import cross_val_score, StratifiedShuffleSplit
+from sklearn.metrics import accuracy_score
+from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 
-N_SPLITS = 10
-data = pd.read_csv("../data/updrs.csv")
-X = data.drop(columns=["patno", "score", "date_scan"])
-y = data["score"].astype(int)
+N_SPLITS = 9
 
-scaler = preprocessing.StandardScaler().fit(X)
-X = pd.DataFrame(scaler.transform(X))
-skf = StratifiedShuffleSplit(n_splits=N_SPLITS)
 
-SVClassifier = svm.SVC(C=50, gamma=0.001, kernel='rbf')
-scores = cross_val_score(SVClassifier, X, y,
-                         cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
-                         scoring='f1_micro')
-print("F1-micro: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
-scores = cross_val_score(SVClassifier, X, y,
-                         cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
-                         scoring='f1_macro')
-print("F1-macro: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
-scores = cross_val_score(SVClassifier, X, y,
-                         cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
-                         scoring='accuracy')
-print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+def process_data(df):
+    X = df.drop(columns=["patno", "score", "date_scan"])
+    y = df["score"].astype(int)
+    scaler = preprocessing.StandardScaler().fit(X)
+    X = pd.DataFrame(scaler.transform(X))
+
+    return X, y
+
+avg_accuracy = 0
+for i in range(0, N_SPLITS):
+    data_test = pd.read_csv("../data/updrs_splits/split_{}.csv".format(i))
+    data_train = pd.DataFrame()
+    for j in range(0, N_SPLITS):
+        if i != j:
+            split = pd.read_csv("../data/updrs_splits/split_{}.csv".format(j))
+            data_train = pd.concat([data_train, split])
+    X_train, y_train = process_data(data_train)
+    X_test, y_test = process_data(data_test)
+
+    classifier = OneVsOneClassifier(svm.SVC(C=1, kernel='rbf', gamma=0.2))
+    classifier.fit(X_train, y_train)
+    y_pred = classifier.predict(X_test)
+    accuracy = accuracy_score(y_pred, y_test)
+    avg_accuracy += accuracy
+    print("Split {0} accuracy: {1}".format(i, accuracy))
+
+print()
+print("Average accuracy: {}".format(avg_accuracy / N_SPLITS))

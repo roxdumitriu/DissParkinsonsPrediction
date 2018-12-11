@@ -1,46 +1,44 @@
 import pandas as pd
 from sklearn import preprocessing, svm
-from sklearn.metrics import classification_report
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 
-# {'C': 100, 'gamma': 0.001, 'kernel': 'rbf'}
 
-data = pd.read_csv("../data/updrs.csv")
-X = data.drop(columns=["patno", "score", "date_scan"])
-y = data["score"].astype(int)
-scaler = preprocessing.StandardScaler().fit(X)
-X = pd.DataFrame(scaler.transform(X))
+def process_data(df):
+    X = df.drop(columns=["patno", "score", "date_scan"])
+    y = df["score"].astype(int)
+    scaler = preprocessing.StandardScaler().fit(X)
+    X = pd.DataFrame(scaler.transform(X))
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    return X, y
 
-tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
-                     'C': [1, 10, 50, 100, 500, 1000]},
-                    {'kernel': ['linear'], 'C': [1, 10, 50, 100, 500, 1000]}]
 
-score = "accuracy"
+train_df = pd.DataFrame()
+for x in range(0, 9):
+    split = pd.read_csv("../data/updrs_splits/split_{}.csv".format(x))
+    train_df = pd.concat([train_df, split])
 
-clf = GridSearchCV(svm.SVC(), tuned_parameters, cv=5,
-                   scoring='%s' % score)
-clf.fit(X_train, y_train)
+test_df = pd.read_csv("../data/updrs_splits/split_9.csv")
 
-print("Best parameters set found on development set:")
-print()
-print(clf.best_params_)
-print()
-print("Grid scores on development set:")
-print()
-means = clf.cv_results_['mean_test_score']
-stds = clf.cv_results_['std_test_score']
-for mean, std, params in zip(means, stds, clf.cv_results_['params']):
-    print("%0.3f (+/-%0.03f) for %r"
-          % (mean, std * 2, params))
-print()
+X_train, y_train = process_data(train_df)
+X_test, y_test = process_data(test_df)
 
-print("Detailed classification report:")
-print()
-print("The model is trained on the full development set.")
-print("The scores are computed on the full evaluation set.")
-print()
-y_true, y_pred = y_test, clf.predict(X_test)
-print(classification_report(y_true, y_pred))
-print()
+max_acc = 0
+max_c = 0
+max_gamma = 0
+max_y_pred = []
+for gamma in [x / 10 for x in range(1, 10)]:
+    for c in range(1, 1000, 50):
+        clf = OneVsOneClassifier(svm.SVC(C=c, kernel='rbf', gamma=gamma))
+        clf.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+        acc = accuracy_score(y_pred=y_pred, y_true=y_test)
+        if acc > max_acc:
+            max_acc = acc
+            max_c = c
+            max_gamma = gamma
+            max_y_pred = y_pred
+
+print("max accuracy: {0}\n C: {1}, gamma:{2}".format(max_acc, max_c, max_gamma))
+print(confusion_matrix(y_test, max_y_pred))
+

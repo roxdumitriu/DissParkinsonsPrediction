@@ -39,7 +39,9 @@ for x in range(0, 4):
     df["date_scan"] = date_scan
     df["patno"] = patient_no
     df = df.drop(columns=[pk])
-    # If the dataframe is about volumes.
+
+    # If the dataframe is a volume dataframe, then normalise the value based
+    # on eTIV.
     if x == 2 or x == 3:
         df = pd.merge(df, diagnosis_df, on=["patno"])
         eTIVs = {}
@@ -59,4 +61,7 @@ for x in range(0, 4):
 data = pd.merge(dataframes[0], dataframes[1], on=["date_scan", "patno"])
 data = pd.merge(data, dataframes[2], on=["date_scan", "patno"])
 data = pd.merge(data, dataframes[3], on=["date_scan", "patno"])
+data = data.drop(
+    columns=["lh_MeanThickness_thickness", "rh_MeanThickness_thickness",
+             "lh_WhiteSurfArea_area", "rh_WhiteSurfArea_area"])
 data.to_csv("../data/thickness_and_volume_data.csv", index=False)

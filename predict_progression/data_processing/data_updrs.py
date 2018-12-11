@@ -37,11 +37,13 @@ current_bucket_size = 0
 counts = thick_vol_df["score"].value_counts().to_dict()
 for score in sorted(counts):
     count = counts[score]
-    if current_bucket_size + count > max_bucket_size:
+    if current_bucket_size + count > max_bucket_size and score != 0:
         if bucket < num_buckets - 1:
             bucket += 1
         current_bucket_size = 0
     scoring_buckets[score] = bucket
     current_bucket_size += count
 thick_vol_df["score"].replace(scoring_buckets, inplace=True)
+print(scoring_buckets)
+print(thick_vol_df["score"].value_counts())
 thick_vol_df.to_csv("../data/updrs.csv", index=False)
