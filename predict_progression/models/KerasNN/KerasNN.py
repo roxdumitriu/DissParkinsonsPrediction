@@ -14,7 +14,7 @@ def baseline_model():
     model = Sequential()
     model.add(Dense(64, input_dim=296, kernel_initializer='uniform',
                     activation='softmax', kernel_constraint=maxnorm(4)))
-    model.add(Dense(32, kernel_initializer='uniform', activation='relu',
+    model.add(Dense(64, kernel_initializer='uniform', activation='relu',
                     kernel_constraint=maxnorm(4)))
     model.add(BatchNormalization())
     model.add(Dropout(0.5))
