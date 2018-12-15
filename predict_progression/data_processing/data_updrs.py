@@ -29,7 +29,7 @@ thick_vol_df.drop_duplicates(subset=["date_scan", "patno"], keep="first",
                              inplace=True)
 
 # Split the scores into equally-sized buckets.
-num_buckets = 5
+num_buckets = 4
 max_bucket_size = len(thick_vol_df["score"]) / num_buckets
 scoring_buckets = {}
 bucket = 0
@@ -37,12 +37,13 @@ current_bucket_size = 0
 counts = thick_vol_df["score"].value_counts().to_dict()
 for score in sorted(counts):
     count = counts[score]
-    if current_bucket_size + count > max_bucket_size and score != 0:
+    if current_bucket_size > max_bucket_size and score != 0:
         if bucket < num_buckets - 1:
             bucket += 1
         current_bucket_size = 0
     scoring_buckets[score] = bucket
     current_bucket_size += count
+
 thick_vol_df["score"].replace(scoring_buckets, inplace=True)
 print(scoring_buckets)
 print(thick_vol_df["score"].value_counts())

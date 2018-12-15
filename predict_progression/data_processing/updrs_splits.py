@@ -1,5 +1,4 @@
 import pandas as pd
-from sklearn.model_selection import StratifiedShuffleSplit
 
 N_SPLITS = 10
 

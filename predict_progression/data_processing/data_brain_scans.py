@@ -39,11 +39,16 @@ for x in range(0, 4):
     df["date_scan"] = date_scan
     df["patno"] = patient_no
     df = df.drop(columns=[pk])
+    # Drop all the patients that have a cortical thickness or volume of 0.
+    df = df[(df != 0).all(1)]
+
+    # Only keep healthy or diagnosed patients.
+    df = pd.merge(df, diagnosis_df, on=["patno"])
+    df = df.loc[df["diagnosis"] != "PRODROMA"]
 
     # If the dataframe is a volume dataframe, then normalise the value based
     # on eTIV.
     if x == 2 or x == 3:
-        df = pd.merge(df, diagnosis_df, on=["patno"])
         eTIVs = {}
         for diagnosis in list(df["diagnosis"].unique()):
             eTIVs[diagnosis] = df.loc[df["diagnosis"] == diagnosis][
@@ -54,7 +59,7 @@ for x in range(0, 4):
                 for index, row in df.iterrows():
                     df.at[index, column] = row[column] * eTIVs[
                         row["diagnosis"]] / row["eTIV"]
-        df = df.drop(columns=["diagnosis"])
+    df = df.drop(columns=["diagnosis"])
 
     dataframes[x] = df.drop(columns=["eTIV", "BrainSegVolNotVent"])
 

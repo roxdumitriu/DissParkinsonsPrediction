@@ -1,6 +1,7 @@
 import pandas as pd
 
 from sklearn import preprocessing
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
 from sklearn.neural_network import MLPClassifier
@@ -17,21 +18,22 @@ def process_data(df):
 
 train_df = pd.DataFrame()
 for x in range(0, 9):
-    split = pd.read_csv("../data/updrs_splits/split_{}.csv".format(x))
+    split = pd.read_csv("../../../data/updrs_splits/split_{}.csv".format(x))
     train_df = pd.concat([train_df, split])
 
-test_df = pd.read_csv("../data/updrs_splits/split_9.csv")
+test_df = pd.read_csv("../../../data/updrs_splits/split_9.csv")
 
 X_train, y_train = process_data(train_df)
 X_test, y_test = process_data(test_df)
 
-parameters = [{'alpha': [0.1, 0.01, 0.001],
-               'hidden_layer_sizes': [(64, 64, 64), (64, 64, 64, 64)],
-               'max_iter': [5000, 10000]},
+parameters = [{'n_estimators': [10, 50, 100, 1000, 2000, 3000],
+               'learning_rate': [0.1, 0.01, 0.001],
+               'max_depth': [2, 4, 8, 16],
+               'max_features': [None, "auto", "log2"]}
               ]
 score = "accuracy"
 
-clf = GridSearchCV(MLPClassifier(), parameters,
+clf = GridSearchCV(GradientBoostingClassifier(), parameters,
                    cv=StratifiedShuffleSplit(n_splits=10), scoring=score)
 
 print("# Tuning hyper-parameters for %s" % score)

@@ -1,51 +1,52 @@
 import pandas as pd
 from keras import Sequential
-from keras.layers import Dense
+from keras.constraints import maxnorm
+from keras.layers import Dense, Dropout, BatchNormalization
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn import preprocessing
-from sklearn.metrics import accuracy_score
+from sklearn.model_selection import cross_val_score, StratifiedShuffleSplit
 
-N_SPLITS = 9
+N_SPLITS = 3
 
 
 def baseline_model():
     # create model
     model = Sequential()
-    model.add(Dense(16, input_dim=4, activation='relu'))
-    model.add(Dense(5, activation='softmax'))
+    model.add(Dense(64, input_dim=296, kernel_initializer='uniform',
+                    activation='softmax', kernel_constraint=maxnorm(4)))
+    model.add(Dense(32, kernel_initializer='uniform', activation='relu',
+                    kernel_constraint=maxnorm(4)))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.5))
+    model.add(Dense(4, kernel_initializer='uniform', activation='softmax'))
     # Compile model
-    model.compile(loss='categorical_crossentropy', optimizer='adam',
+    model.compile(loss='categorical_crossentropy', optimizer='Adagrad',
                   metrics=['accuracy'])
     return model
 
 
-def process_data(df):
-    X = df.drop(columns=["patno", "score", "date_scan"])
-    y = df["score"].astype(int)
-    scaler = preprocessing.StandardScaler().fit(X)
-    X = pd.DataFrame(scaler.transform(X))
+data = pd.DataFrame()
+for i in range(0, 9):
+    split = pd.read_csv("../data/updrs_splits/split_{}.csv".format(i))
+    data = pd.concat([data, split])
 
-    return X, y
+X = data.drop(columns=["patno", "score", "date_scan"])
+y = data["score"].astype(int)
 
+scaler = preprocessing.StandardScaler().fit(X)
+X = pd.DataFrame(scaler.transform(X))
 
-avg_accuracy = 0
-for i in range(0, N_SPLITS):
-    data_test = pd.read_csv("../data/updrs_splits/split_{}.csv".format(i))
-    data_train = pd.DataFrame()
-    for j in range(0, N_SPLITS):
-        if i != j:
-            split = pd.read_csv("../data/updrs_splits/split_{}.csv".format(j))
-            data_train = pd.concat([data_train, split])
-    X_train, y_train = process_data(data_train)
-    X_test, y_test = process_data(data_test)
-
-    classifier = KerasClassifier(build_fn=baseline_model, epochs=200,
-                                 batch_size=5, verbose=0)
-    classifier.fit(X_train, y_train)
-    y_pred = classifier.predict(X_test)
-    accuracy = accuracy_score(y_pred, y_test)
-    avg_accuracy += accuracy
-    print("Split {0} accuracy: {1}".format(i, accuracy))
-
-print()
-print("Average accuracy: {}".format(avg_accuracy / N_SPLITS))
+KerasNN = KerasClassifier(build_fn=baseline_model, epochs=2000,
+                          batch_size=80, verbose=0, class_weight='balanced')
+scores = cross_val_score(KerasNN, X, y,
+                         cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
+                         scoring='accuracy')
+print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+scores = cross_val_score(KerasNN, X, y,
+                         cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
+                         scoring='f1_micro')
+print("F1-micro: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+scores = cross_val_score(KerasNN, X, y,
+                         cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
+                         scoring='f1_macro')
+print("F1-macro: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
