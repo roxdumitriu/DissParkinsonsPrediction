@@ -17,10 +17,10 @@ def process_data(df):
 def parameter_search(model, parameters, n_splits):
     train_df = pd.DataFrame()
     for x in range(0, 9):
-        split = pd.read_csv("../data/updrs_splits/split_{}.csv".format(x))
+        split = pd.read_csv("../../../data/updrs_splits/split_{}.csv".format(x))
         train_df = pd.concat([train_df, split])
 
-    test_df = pd.read_csv("../data/updrs_splits/split_9.csv")
+    test_df = pd.read_csv("../../../data/updrs_splits/split_9.csv")
 
     X_train, y_train = process_data(train_df)
     X_test, y_test = process_data(test_df)
