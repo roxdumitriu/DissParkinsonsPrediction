@@ -4,7 +4,9 @@ from keras.constraints import maxnorm
 from keras.layers import Dense, Dropout, BatchNormalization
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn import preprocessing
-from sklearn.model_selection import cross_val_score, StratifiedShuffleSplit
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import cross_val_score, StratifiedShuffleSplit, \
+    train_test_split
 
 N_SPLITS = 3
 
@@ -12,7 +14,7 @@ N_SPLITS = 3
 def baseline_model():
     # create model
     model = Sequential()
-    model.add(Dense(64, input_dim=296, kernel_initializer='uniform',
+    model.add(Dense(256, input_dim=297, kernel_initializer='uniform',
                     activation='softmax', kernel_constraint=maxnorm(4)))
     model.add(Dense(64, kernel_initializer='uniform', activation='relu',
                     kernel_constraint=maxnorm(4)))
@@ -38,6 +40,12 @@ X = pd.DataFrame(scaler.transform(X))
 
 KerasNN = KerasClassifier(build_fn=baseline_model, epochs=2000,
                           batch_size=80, verbose=0, class_weight='balanced')
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
+KerasNN.fit(X_train, y_train)
+y_pred = KerasNN.predict(X_train)
+print(accuracy_score(y_train, y_pred))
+y_pred = KerasNN.predict(X_test)
+print(accuracy_score(y_test, y_pred))
 scores = cross_val_score(KerasNN, X, y,
                          cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
                          scoring='accuracy')

@@ -69,4 +69,6 @@ data = pd.merge(data, dataframes[3], on=["date_scan", "patno"])
 data = data.drop(
     columns=["lh_MeanThickness_thickness", "rh_MeanThickness_thickness",
              "lh_WhiteSurfArea_area", "rh_WhiteSurfArea_area"])
+data = pd.merge(data, diagnosis_df, on=["patno"])
+data["diagnosis"] = pd.get_dummies(data["diagnosis"])
 data.to_csv("../data/thickness_and_volume_data.csv", index=False)

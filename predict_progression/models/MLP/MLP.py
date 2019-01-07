@@ -11,8 +11,10 @@ y = data["score"].astype(int)
 scaler = preprocessing.StandardScaler().fit(X)
 X = pd.DataFrame(scaler.transform(X))
 
-MLPclassifier = MLPClassifier(hidden_layer_sizes=(64, 64, 64), alpha=0.1,
-                              max_iter=10000, solver='lbfgs')
+MLPclassifier = MLPClassifier(hidden_layer_sizes=(256, 64), alpha=0.001,
+                              solver='lbfgs', batch_size=80, verbose=0,
+                              activation='relu', learning_rate='adaptive',
+                              max_iter=5000)
 scores = cross_val_score(MLPclassifier, X, y,
                          cv=StratifiedShuffleSplit(n_splits=N_SPLITS),
                          scoring='f1_micro')
