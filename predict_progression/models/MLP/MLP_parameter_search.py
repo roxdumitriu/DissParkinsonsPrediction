@@ -1,8 +1,3 @@
-import pandas as pd
-
-from sklearn import preprocessing
-from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
 from sklearn.neural_network import MLPClassifier
 
 from predict_progression.models.parameter_search import parameter_search
