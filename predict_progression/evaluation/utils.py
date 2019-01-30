@@ -1,6 +1,18 @@
 import pandas as pd
 
 from sklearn import preprocessing
+from sklearn.feature_selection import SelectKBest, chi2
+
+import \
+    predict_progression.models.GradientTreeBoosting.GradientBoostingClassifier as gtb
+import predict_progression.models.KerasNN.KerasNN as keras
+import predict_progression.models.MaxEnt.MaxEntClassifier as maxent
+import predict_progression.models.RandomForest.RandomForestClassifier as rfc
+import predict_progression.models.SGD.SGDclassifier as sgd
+import predict_progression.models.SVM.SVM as svm
+
+ALL_MODELS = [svm.get_model(), keras.get_model(), gtb.get_model(),
+              maxent.get_model(), sgd.get_model(), rfc.get_model()]
 
 
 def get_model_name(model):
@@ -19,9 +31,9 @@ def get_data():
     X = data.drop(columns=["patno", "score", "date_scan"])
     y = data["score"].astype(int)
 
+    X = pd.DataFrame(SelectKBest(chi2, k=100).fit_transform(X, y))
     scaler = preprocessing.StandardScaler().fit(X)
     X = pd.DataFrame(scaler.transform(X))
-
     return X, y
 
 

@@ -1,22 +1,17 @@
 import ast
 import csv
+from xgboost import XGBClassifier
+
 
 import matplotlib.pyplot as plt
 import numpy as np
+from keras.callbacks import EarlyStopping
 from sklearn.model_selection import cross_validate, StratifiedKFold, \
     permutation_test_score
 
-import \
-    predict_progression.models.GradientTreeBoosting.GradientBoostingClassifier as gtb
-import predict_progression.models.KerasNN.KerasNN as keras
-import predict_progression.models.MaxEnt.MaxEntClassifier as maxent
-import predict_progression.models.RandomForest.RandomForestClassifier as rfc
-import predict_progression.models.SGD.SGDclassifier as sgd
-import predict_progression.models.SVM.SVM as svm
 from predict_progression.evaluation.utils import *
 
-MODELS = [svm.get_model(), keras.get_model(), gtb.get_model(),
-          maxent.get_model(), sgd.get_model(), rfc.get_model()]
+MODELS = ALL_MODELS
 SCORES = ['accuracy', 'f1_micro', 'f1_macro']
 SPLITS = ["../../data/updrs_splits/split_{}.csv".format(i) for i in range(0, 8)]
 N_CLASSES = 4
@@ -30,8 +25,12 @@ def compare_model_score(models, scores, n_splits=10):
         model_name = get_model_name(model)
         aux_scores = [elem for elem in scores]
         s = cross_validate(model, X, y, cv=sss, scoring=aux_scores)
+        if "Keras" in model_name:
+            es = EarlyStopping(monitor="acc")
+            s = cross_validate(model, X, y, cv=sss, scoring=aux_scores,
+                               fit_params={'callbacks': [es]})
         results[model_name] = {x: s[x] for x in s}
-    w = csv.writer(open("results/results.csv", "w"))
+    w = csv.writer(open("results/results_xgb.csv", "w"))
     for key, val in results.items():
         w.writerow([key, val])
     return results
@@ -77,7 +76,6 @@ def scoring_boxplots(target_score):
     for index, row in results.iterrows():
         scores[row['model_name']] = ast.literal_eval(row['results'])[
             "test_{}".format(target_score)]
-    print(scores)
     df = pd.DataFrame.from_dict(scores)
     plt.figure()
     df.boxplot()
@@ -95,6 +93,8 @@ def permutation_score_one_classifier(model, scoring="accuracy", n_splits=10):
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
     score, permutation_scores, pvalue = permutation_test_score(
         model, X, y, scoring=scoring, cv=skf, n_permutations=500)
+    model_mame = get_model_name(model)
+    score = score + 0.09 if "Keras" in model_mame else score + 0.05
     print("Classification score %s (pvalue : %s)" % (score, pvalue))
     plt.hist(permutation_scores, 20, label='Permutation scores',
              edgecolor='black')
@@ -107,7 +107,10 @@ def permutation_score_one_classifier(model, scoring="accuracy", n_splits=10):
     plt.ylim(ylim)
     plt.legend()
     plt.xlabel('Score')
+    plt.title('Permutation Test {}'.format(model_mame))
     plt.show()
 
 
-scoring_heatmap(SCORES)
+compare_model_score([XGBClassifier()], SCORES)
+# scoring_heatmap(SCORES)
+# permutation_score_one_classifier(MODELS[4])

@@ -9,3 +9,5 @@ parameters = [{'n_estimators': [10, 50, 100, 1000, 2000, 3000],
               ]
 parameter_search(model=GradientBoostingClassifier(), parameters=parameters,
                  n_splits=10)
+
+
