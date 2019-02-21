@@ -31,9 +31,9 @@ def get_data():
     X = data.drop(columns=["patno", "score", "date_scan"])
     y = data["score"].astype(int)
 
-    X = pd.DataFrame(SelectKBest(chi2, k=100).fit_transform(X, y))
-    scaler = preprocessing.StandardScaler().fit(X)
-    X = pd.DataFrame(scaler.transform(X))
+    # X = pd.DataFrame(SelectKBest(chi2, k=100).fit_transform(X, y))
+    # scaler = preprocessing.StandardScaler().fit(X)
+    # X = pd.DataFrame(scaler.transform(X))
     return X, y
 
 

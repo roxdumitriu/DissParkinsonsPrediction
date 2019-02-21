@@ -1,15 +1,15 @@
 import ast
 import csv
-from xgboost import XGBClassifier
-
 
 import matplotlib.pyplot as plt
 import numpy as np
 from keras.callbacks import EarlyStopping
 from sklearn.model_selection import cross_validate, StratifiedKFold, \
     permutation_test_score
+from sklearn.pipeline import make_pipeline
 
 from predict_progression.evaluation.utils import *
+from predict_progression.models.ensamble import ensamble
 
 MODELS = ALL_MODELS
 SCORES = ['accuracy', 'f1_micro', 'f1_macro']
@@ -24,13 +24,11 @@ def compare_model_score(models, scores, n_splits=10):
     for model in models:
         model_name = get_model_name(model)
         aux_scores = [elem for elem in scores]
-        s = cross_validate(model, X, y, cv=sss, scoring=aux_scores)
-        if "Keras" in model_name:
-            es = EarlyStopping(monitor="acc")
-            s = cross_validate(model, X, y, cv=sss, scoring=aux_scores,
-                               fit_params={'callbacks': [es]})
+        clf = make_pipeline(SelectKBest(chi2, k=100),
+                            preprocessing.StandardScaler(), model)
+        s = cross_validate(clf, X, y, cv=sss, scoring=aux_scores)
         results[model_name] = {x: s[x] for x in s}
-    w = csv.writer(open("results/results_xgb.csv", "w"))
+    w = csv.writer(open("results/results_keras.csv", "w"))
     for key, val in results.items():
         w.writerow([key, val])
     return results
@@ -70,15 +68,25 @@ def scoring_heatmap(scores):
 
 
 def scoring_boxplots(target_score):
-    results = pd.read_csv("results/results.csv", header=None)
+    results = pd.read_csv("results/results.csv", sep=",", header=None)
     results.columns = ["model_name", "results"]
+    print(repr(results["results"][0].replace("\r\n       ", "")))
     scores = {}
     for index, row in results.iterrows():
+        row['results'] = row['results'].replace("\r\n", "").replace("array([",
+                                                                    "[").replace(
+            "])", "]")
         scores[row['model_name']] = ast.literal_eval(row['results'])[
             "test_{}".format(target_score)]
     df = pd.DataFrame.from_dict(scores)
     plt.figure()
-    df.boxplot()
+    bp = df.boxplot(patch_artist=True, return_type='dict')
+    cboxes = 'lightgreen'
+    cmedian = 'darkgreen'
+    for patch in bp['boxes']:
+        patch.set_facecolor(cboxes)
+    for patch in bp['medians']:
+        patch.set_color(cmedian)
     plt.show()
 
 
@@ -111,6 +119,6 @@ def permutation_score_one_classifier(model, scoring="accuracy", n_splits=10):
     plt.show()
 
 
-compare_model_score([XGBClassifier()], SCORES)
-# scoring_heatmap(SCORES)
-# permutation_score_one_classifier(MODELS[4])
+compare_model_score(MODELS[1:2], SCORES)
+# compare_model_score(MODELS, SCORES)
+# scoring_boxplots(SCORES[0])

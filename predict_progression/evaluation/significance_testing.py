@@ -8,8 +8,8 @@ from predict_progression.evaluation.utils import *
 
 MODELS = ALL_MODELS
 MODELS_PREDCITIONS = {
-get_model_name(model): "predictions/{}_all_predictions.txt".format(
-    get_model_name(model)) for model in MODELS}
+    get_model_name(model): "predictions/{}_all_predictions.txt".format(
+        get_model_name(model)) for model in MODELS}
 
 
 def get_predictions(models, n_splits=10):
@@ -50,7 +50,7 @@ def significance_heatmap(prediction_files):
                                                           filename2) if model1 != model2 else 0
     preds = np.array([np.array(
         [float("{0:.3g}".format(predictions[(m1, m2)])) for m1 in headers]) for
-                      m2 in headers])
+        m2 in headers])
     preds = np.tril(preds)
     fig, ax = plt.subplots()
     im = ax.imshow(preds, cmap="YlGn")
@@ -64,9 +64,8 @@ def significance_heatmap(prediction_files):
             text = ax.text(j, i, preds[i][j], ha="center", va="center",
                            color="black" if 0.5 > preds[i][j] > 0 else "white")
     plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right')
-    # fig.tight_layout()
+    fig.tight_layout()
     plt.show()
 
 
-# print(wilcoxon_test("predictions/GradientBoostingClassifier_all_predictions.txt", "predictions/KerasNeuralNet_all_predictions.txt"))
 significance_heatmap(MODELS_PREDCITIONS)

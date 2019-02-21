@@ -1,8 +1,6 @@
 import pandas as pd
 from sklearn import preprocessing
 from sklearn import svm
-from sklearn.feature_selection import SelectKBest, chi2
-from sklearn.metrics import f1_score, confusion_matrix, accuracy_score
 from sklearn.model_selection import StratifiedShuffleSplit, cross_val_score
 
 N_SPLITS = 10
