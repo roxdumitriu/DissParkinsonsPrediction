@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 
 from sklearn import preprocessing
@@ -15,6 +17,7 @@ def process_data(df):
 
 def parameter_search(model, parameters, n_splits):
     train_df = pd.DataFrame()
+    print(os.path.abspath(__file__))
     for x in range(0, 8):
         split = pd.read_csv("../../../data/updrs_splits/split_{}.csv".format(x))
         train_df = pd.concat([train_df, split])

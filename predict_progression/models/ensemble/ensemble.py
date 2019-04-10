@@ -1,4 +1,4 @@
-from sklearn.ensemble import VotingClassifier
+from sklearn.ensemble import VotingClassifier, AdaBoostClassifier
 
 import \
     predict_progression.models.GradientTreeBoosting.GradientBoostingClassifier as gtb
@@ -8,9 +8,9 @@ import predict_progression.models.RandomForest.RandomForestClassifier as rfc
 import predict_progression.models.SGD.SGDclassifier as sgd
 import predict_progression.models.SVM.SVM as svm
 
-MODELS = [('gtb', gtb.get_model()), ('svm', svm.get_model()),
-          ('rfc', rfc.get_model())]
+MODELS = [('gtb', gtb.get_model()), ('mlp', keras.get_model()),
+          ('sgd', sgd.get_model())]
 
 
 def get_model():
-    return VotingClassifier(estimators=MODELS, voting='hard')
+    return VotingClassifier(estimators=MODELS, voting='soft', weights=[5, 2, 5])

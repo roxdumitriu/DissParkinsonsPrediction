@@ -20,5 +20,5 @@ for train_index, test_index in skf.split(X, y):
 
 for x in range(0, len(splits)):
     print(splits[x]["score"].value_counts())
-    splits[x].to_csv("../../data/updrs_splits/split_{}.csv".format(x),
-                     index=False)
+    # splits[x].to_csv("../../data/updrs_splits/split_{}.csv".format(x),
+    #                  index=False)

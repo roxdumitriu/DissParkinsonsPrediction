@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+from sklearn.feature_selection import SelectPercentile, chi2, f_classif
 
 updrs_df = pd.read_csv("../data/MDS_UPDRS_Part_III.csv")
 thick_vol_df = pd.read_csv("../data/thickness_and_volume_data.csv")
@@ -44,5 +46,35 @@ for score in sorted(counts):
     scoring_buckets[score] = bucket
     current_bucket_size += count
 
+
+def find_most_common_score(scoring_buckets, counts, num_buckets):
+    mcs = {x: 0 for x in range(num_buckets)}
+    max_count = {x: 0 for x in range(num_buckets)}
+    for score, bucket in scoring_buckets.items():
+        if counts[score] > max_count[bucket]:
+            mcs[bucket] = score
+            max_count[bucket] = counts[score]
+    return mcs
+
+
+# print(scoring_buckets)
+# print(find_most_common_score(scoring_buckets, counts, num_buckets))
 thick_vol_df["score"].replace(scoring_buckets, inplace=True)
-thick_vol_df.to_csv("../data/updrs.csv", index=False)
+print(thick_vol_df["score"].value_counts())
+
+
+fs = SelectPercentile(f_classif, percentile=100)
+best = fs.fit(thick_vol_df.drop(columns=["date_scan", "patno", "score"]), thick_vol_df["score"]).get_support()
+cols = thick_vol_df.columns.values
+scores = []
+max_score = 0
+best_col = ""
+for col, val, score in zip(cols, best, fs.scores_):
+    if val and score > max_score:
+        max_score = score
+        best_col = col
+
+# print(best_col)
+# print(sum(scores) / len(scores))
+# print(SelectPercentile(chi2, percentile=10).fit(thick_vol_df.drop(columns=["date_scan", "patno", "score"]), thick_vol_df["score"]).get_support())
+# thick_vol_df.to_csv("../data/updrs.csv", index=False)
