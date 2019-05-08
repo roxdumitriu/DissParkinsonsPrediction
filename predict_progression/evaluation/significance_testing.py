@@ -1,43 +1,30 @@
 import copy
 import random
 
-import numpy as np
 import matplotlib.pyplot as plt
-
-from keras.callbacks import EarlyStopping
+import numpy as np
 from scipy.stats import wilcoxon
-from sklearn.feature_selection import mutual_info_classif
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import StratifiedKFold, cross_val_predict, \
-    permutation_test_score
-from sklearn.pipeline import make_pipeline
 
-from predict_progression.evaluation.utils import *
-
-MODELS = ALL_MODELS
-MODELS_PREDCITIONS = {
-    get_model_name(model): "predictions/{}_all_predictions.txt".format(
-        get_model_name(model)) for model in MODELS}
-N_CLASSES = 4
+import predict_progression.evaluation.utils as utils
+from predict_progression.evaluation import cross_validation
 
 
-def get_predictions(models, n_splits=10):
-    X, y = get_data()
-    np.savetxt("predictions/all_predictions.txt", X=y)
-    sss = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
-    for model in models:
-        model_name = get_model_name(model)
-        clf = make_pipeline(SelectKBest(mutual_info_classif, k=100),
-                            preprocessing.StandardScaler(), model)
-        s = cross_val_predict(clf, X, y, cv=sss)
-        np.savetxt("predictions/{}_all_predictions.txt".format(model_name), X=s)
-
-
-def permutation_score_one_classifier(model, n_permutations=500):
-    y = np.loadtxt("predictions/all_predictions.txt")
-    model_name = get_model_name(model)
-    pred = np.loadtxt("predictions/{}_all_predictions.txt".format(model_name))
+def permutation_test(model, n_permutations=500):
+    """ Run the permutation test on the predictions of a model and plot the
+        results as a histogram. The histogram shows the accuracy of a random
+        permutation of the model's predictions.
+     Parameters
+     ----------
+     model : Sklearn estimator
+        The model to compute the permutation test on.
+     n_permutations : int
+        The number of permutations that should be performed.
+     """
+    y = cross_validation.get_true_labels()
+    pred = cross_validation.get_model_predicted_labels(model)
     aux_pred = copy.deepcopy(pred)
+
     model_acc = accuracy_score(y_true=y, y_pred=aux_pred)
     accuracies = []
     count = 0
@@ -52,26 +39,49 @@ def permutation_score_one_classifier(model, n_permutations=500):
     pvalue = (count + 1) / (n_permutations + 1)
     model_acc += 0.04
     print("Classification score %s (pvalue : %s)" % (model_acc, pvalue))
-    plt.hist(accuracies, 20, label='Permutation scores', color = "skyblue",
+    plt.hist(accuracies, 20, label='Permutation scores', color="skyblue",
              edgecolor='black')
     ylim = plt.ylim()
     plt.plot(2 * [model_acc], ylim, '--m', linewidth=3,
              label='Classification Score'
                    ' (pvalue {:.5f})'.format(pvalue))
-    plt.plot(2 * [1. / N_CLASSES], ylim, '--k', linewidth=3, label='Luck')
+    plt.plot(2 * [1. / 4], ylim, '--k', linewidth=3, label='Luck')
 
     plt.ylim(ylim)
     plt.legend()
     plt.xlabel('Score')
-    plt.title('Permutation Test {}'.format(model_name))
+    plt.title('Permutation Test {}'.format(utils.get_model_name(model)))
     plt.show()
 
 
-def wilcoxon_test(first_model_filename, second_model_filename,
-                  true_filename="predictions/all_predictions.txt"):
-    y1 = list(np.loadtxt(first_model_filename))
-    y2 = list(np.loadtxt(second_model_filename))
-    y_true = list(np.loadtxt(true_filename))
+def permutation_test_all_models(models=utils.ALL_MODELS, n_permutations=500):
+    """ Run the permutation test on the predictions of a model and plot the
+            results as a histogram. The histogram shows the accuracy of a random
+            permutation of the model's predictions.
+    Parameters
+    ----------
+    models : List of Sklearn estimators
+        The list of models to compute permutation test on.
+    n_permutations : int
+        The number of permutations that should be performed.
+    """
+    for model in models:
+        permutation_test(model, n_permutations)
+
+
+def wilcoxon_test(first_model, second_model):
+    """ Perform the pair-wise Wilcoxon test for significance testing of two
+        models.
+     Parameters
+     ----------
+     first_model : Sklearn estimator
+        First model to perform the test on.
+     second_model : Sklearn estimator
+         Second model to perform the test on.
+     """
+    y1 = cross_validation.get_model_predicted_labels(first_model)
+    y2 = cross_validation.get_model_predicted_labels(second_model)
+    y_true = cross_validation.get_true_labels()
 
     correctness_y1 = [1 if x == y else 0 for x, y in zip(y1, y_true)]
     correctness_y2 = [1 if x == y else 0 for x, y in zip(y2, y_true)]
@@ -80,13 +90,15 @@ def wilcoxon_test(first_model_filename, second_model_filename,
     return wilcoxon(correctness_y1, correctness_y2)[1]
 
 
-def significance_heatmap(prediction_files):
-    headers = list(prediction_files.keys())
+def wilcoxon_heatmap(models=utils.ALL_MODELS):
+    """ Plot the results of the Wilcoxon test as a heat map.
+    """
+    headers = [utils.get_model_name(m) for m in models]
     predictions = {}
-    for model1, filename1 in prediction_files.items():
-        for model2, filename2 in prediction_files.items():
-            predictions[(model1, model2)] = wilcoxon_test(filename1,
-                                                          filename2) if model1 != model2 else 0
+    for model1, name1 in zip(models, headers):
+        for model2, name2 in zip(models, headers):
+            predictions[(name1, name2)] = wilcoxon_test(model1,
+                                                        model2) if name1 != name2 else 0
     preds = np.array([np.array(
         [float("{0:.3g}".format(predictions[(m1, m2)])) for m1 in headers]) for
         m2 in headers])
@@ -104,15 +116,10 @@ def significance_heatmap(prediction_files):
             if i <= j:
                 continue
             preds[i][j] *= 0.2 if j == 3 else 0.5
-            text = ax.text(j, i, "{:.4f}".format(preds[i][j]), ha="center", va="center",
-                           color="black" if 0.3 > preds[i][j]  > 0 else "white")
+            text = ax.text(j, i, "{:.4f}".format(preds[i][j]), ha="center",
+                           va="center",
+                           color="black" if 0.3 > preds[i][j] > 0 else "white")
     plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right')
     fig.tight_layout()
     plt.show()
 
-
-significance_heatmap(MODELS_PREDCITIONS)
-# get_predictions(ALL_MODELS, 3)
-
-#for model in ALL_MODELS[3:]:
-#    permutation_score_one_classifier(model)

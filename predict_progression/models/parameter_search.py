@@ -8,6 +8,7 @@ from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
 
 
 def process_data(df):
+
     X = df.drop(columns=["patno", "score", "date_scan"])
     y = df["score"].astype(int)
     scaler = preprocessing.StandardScaler().fit(X)
@@ -16,6 +17,16 @@ def process_data(df):
 
 
 def parameter_search(model, parameters, n_splits):
+    """ Perform Grid Search for parameter search. Exhaustively searches the
+        given parameter space and returns the best parameters.
+     Parameters
+     ----------
+     model : Sklearn estimator
+         The model to be tuned
+     parameters : dict
+         A dictionary of tuning parameters and possible values. For continuous
+         parameters, some sensible discrete values should be passed.
+     """
     train_df = pd.DataFrame()
     print(os.path.abspath(__file__))
     for x in range(0, 8):
