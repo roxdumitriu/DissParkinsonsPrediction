@@ -17,6 +17,19 @@ DIAGNOSIS = "diagnosis"
 
 
 def process_brain_data(df_path, pk):
+    """ Process one brain data file to be concatenated with the rest.
+     Parameters
+     ----------
+     df_path : string
+         Path to the brain data file.
+     pk : string
+         The primary key of the dataframe. Contains the patient number and the
+         date of the scans.
+     Returns
+     ----------
+     A processed data frame, with a separate column for patient number and date
+     of scan.
+     """
     df = pd.read_csv(df_path, delimiter="\t")
     date_scan = []
     patient_no = []
@@ -38,6 +51,16 @@ def process_brain_data(df_path, pk):
 
 
 def inter_cranial_correction(df):
+    """ Scales the size of the brain areas to account for variations in head
+        size. ICV should only be applied to volumetric brain data.
+     Parameters
+     ----------
+     df : Pandas DataFrame
+         DataFrame containing raw volumes of brain ares.
+     Returns
+     ----------
+     A processed DataFrame, with applied ICV.
+     """
     eTIVs = {}
     for diagnosis in list(df[DIAGNOSIS].unique()):
         eTIVs[diagnosis] = df.loc[df[DIAGNOSIS] == diagnosis][
@@ -53,6 +76,16 @@ def inter_cranial_correction(df):
 
 
 def get_diagnosis(diagnosis_path):
+    """ Read and return the diagnosis file. Diagnosis is used to filter out
+        prodromal patients (noisy data) and to apply ICV correction.
+     Parameters
+     ----------
+     diagnosis_path : string
+         Path to the diagnosis files.
+     Returns
+     ----------
+     The diagnosis DataFrame.
+     """
     diagnosis_df = pd.read_csv(diagnosis_path)
     diagnosis_df.rename(
         columns={"RECRUITMENT_CAT": DIAGNOSIS, "PATNO": PATNO},
@@ -65,6 +98,21 @@ def get_diagnosis(diagnosis_path):
 
 def concatenate_data(dataframe_paths=BRAIN_DATA_PATHS, pks=PRIMARY_KEYS,
                      diagnosis_path=DIAGNOSIS_PATH):
+    """ Concatenate the cortical thicknesses and volumes of the brain areas into
+        one DataFrame. Volumes are corrected using ICV.
+     Parameters
+     ----------
+     dataframe_paths : list
+         List of paths where to find the cortical thicknesses and volumes files.
+     pks : list
+         List of primary keys in the files, to be able to extract date of scan
+         and patient number.
+     diagnosis_path : string
+         Path to the diagnosis file.
+     Returns
+     ----------
+     Concatenated DataFrame containing all the features in the final dataset.
+     """
     diagnosis_df = get_diagnosis(diagnosis_path)
     data = pd.DataFrame()
     for dataframe, pk in zip(dataframe_paths, pks):
