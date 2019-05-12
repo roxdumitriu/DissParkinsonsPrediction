@@ -31,7 +31,8 @@ def compute_evaluation_metrics(scores=utils.SCORES, models=utils.ALL_MODELS,
         print("Training {}".format(model_name))
         aux_scores = [elem for elem in scores]
         clf = utils.pipeline_model(model)
-        s = cross_validate(clf, X, y, cv=sss, scoring=aux_scores, return_train_score=False)
+        s = cross_validate(clf, X, y, cv=sss, scoring=aux_scores,
+                           return_train_score=False)
         results[model_name] = {x: s[x] for x in s}
         print()
         print("Finished training {}".format(model_name))
@@ -57,15 +58,15 @@ def get_evaluation_metric(target_score, results_path=utils.RESULTS_FILE_PATH):
     results.columns = ["model_name", "results"]
     scores = {}
     for index, row in results.iterrows():
-        row['results'] = row['results'].replace("\r\n", "").replace("array([",
-                                                                    "[").replace(
-            "])", "]")
+        row['results'] = row['results'].replace("\r\n", "").\
+            replace("array([","[").replace("])", "]")
         scores[row['model_name']] = ast.literal_eval(row['results'])[
             "test_{}".format(target_score)]
     return scores
 
 
-def compute_predictions_all_models(models, prediction_path=utils.PREDICTIONS_PATH):
+def compute_predictions_all_models(models,
+                                   prediction_path=utils.PREDICTIONS_PATH):
     """ Compute the 10-fold cross validation predictions of the
         models and store them in a CSV. The predictions are computed after
         each training routine and concatenated into one.

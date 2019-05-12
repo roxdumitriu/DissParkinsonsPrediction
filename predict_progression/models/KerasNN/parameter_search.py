@@ -25,6 +25,6 @@ def create_model(neurons=8):
 
 model = KerasClassifier(build_fn=create_model, verbose=0, batch_size=80,
                         epochs=500)
-neurons = [8]
+neurons = [8, 10, 20, 64, 256]
 parameters = dict(neurons=neurons)
 parameter_search(model=model, parameters=parameters, n_splits=10)

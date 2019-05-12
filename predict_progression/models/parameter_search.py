@@ -8,7 +8,15 @@ from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
 
 
 def process_data(df):
-
+    """ Process data to perform parameter search on.
+     Parameters
+     ----------
+     df : Pandas DataFrame
+         The data to be processed. Includes the labels.
+     Returns
+     ----------
+     Features and labels, processed and scaled.
+     """
     X = df.drop(columns=["patno", "score", "date_scan"])
     y = df["score"].astype(int)
     scaler = preprocessing.StandardScaler().fit(X)
@@ -16,7 +24,7 @@ def process_data(df):
     return X, y
 
 
-def parameter_search(model, parameters, n_splits):
+def parameter_search(model, parameters):
     """ Perform Grid Search for parameter search. Exhaustively searches the
         given parameter space and returns the best parameters.
      Parameters
@@ -28,7 +36,6 @@ def parameter_search(model, parameters, n_splits):
          parameters, some sensible discrete values should be passed.
      """
     train_df = pd.DataFrame()
-    print(os.path.abspath(__file__))
     for x in range(0, 8):
         split = pd.read_csv("../../../data/updrs_splits/split_{}.csv".format(x))
         train_df = pd.concat([train_df, split])
@@ -38,11 +45,10 @@ def parameter_search(model, parameters, n_splits):
     X_train, y_train = process_data(train_df)
     X_test, y_test = process_data(test_df)
     score = "accuracy"
-    clf = GridSearchCV(model, parameters,
-                       cv=StratifiedShuffleSplit(n_splits=n_splits),
-                       scoring=score, return_train_score=True)
+    clf = GridSearchCV(model, parameters, scoring=score,
+                       return_train_score=True)
 
-    print("# Tuning hyper-parameters for %s \n" % score)
+    print("# Tuning hyper-parameters for {}".format(score))
     clf.fit(X_train, y_train)
     print("Best parameters set found on development set: \n {} \n".format(
         clf.best_params_))
@@ -53,10 +59,5 @@ def parameter_search(model, parameters, n_splits):
                                               clf.cv_results_['params'],
                                               clf.cv_results_[
                                                   'mean_train_score']):
-        print("%0.3f (+/-%0.03f) for %r"
-              % (mean, std * 2, params))
+        print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
         print("The score on the training set is {}".format(train_score))
-    print("Confusion matrix: \n")
-    y_true, y_pred = y_test, clf.predict(X_test)
-    print(confusion_matrix(y_true, y_pred))
-    print()
